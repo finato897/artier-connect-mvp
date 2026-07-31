@@ -1,65 +1,122 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const FEATURES = [
+  {
+    title: "Seluruh Layar atau Per Tab",
+    desc: "Pilih layar penuh, jendela, atau tab tertentu langsung dari dialog browser.",
+    icon: "🖥️",
+  },
+  {
+    title: "Tanpa Install & Tanpa Login",
+    desc: "Cukup buka di browser. Server dan client adalah satu aplikasi web yang sama.",
+    icon: "🌐",
+  },
+  {
+    title: "Kode 6 Digit",
+    desc: "Perangkat sumber mendapat kode sekali pakai. Perangkat target cukup memasukkannya.",
+    icon: "🔢",
+  },
+  {
+    title: "WiFi yang Sama",
+    desc: "Koneksi peer-to-peer cepat di jaringan lokal Anda. Diperiksa otomatis saat terhubung.",
+    icon: "📡",
+  },
+  {
+    title: "Kualitas Bisa Disesuaikan",
+    desc: "Preset Otomatis, HD, Seimbang, atau Hemat Data. Ubah bitrate kapan saja.",
+    icon: "⚡",
+  },
+  {
+    title: "Zoom & Statistik Live",
+    desc: "Perbesar tampilan, layar penuh, serta pantau fps, bitrate, dan resolusi.",
+    icon: "📊",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-1 flex-col">
+      {/* Hero */}
+      <section className="flex flex-col items-center gap-6 px-6 py-20 text-center">
+        <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+          Mirroring layar antar perangkat{" "}
+          <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+            tanpa install
+          </span>
+        </h1>
+        <p className="max-w-xl text-lg text-zinc-400">
+          Android, iPad, Android TV — cukup buka Artier Connect di dua perangkat yang
+          terhubung ke WiFi yang sama. Satu jadi sumber, satu jadi layar.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            href="/app"
+            className="rounded-xl bg-indigo-600 px-8 py-3 font-semibold text-white transition hover:bg-indigo-500"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
+            Buka Aplikasi
+          </Link>
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#cara-pakai"
+            className="rounded-xl border border-white/15 px-8 py-3 font-semibold text-zinc-300 transition hover:bg-white/10"
           >
-            Documentation
+            Cara Pakai
           </a>
         </div>
-      </main>
+      </section>
+
+      {/* Cara pakai */}
+      <section id="cara-pakai" className="px-6 py-16">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-8 text-center text-2xl font-semibold">Cara Pakai</h2>
+          <ol className="flex flex-col gap-6">
+            {[
+              ["Perangkat sumber", "Buka Artier Connect → pilih “Jadi Server” → pilih layar/tab yang dibagikan → dapat kode 6 digit."],
+              ["Perangkat target", "Buka Artier Connect → pilih “Jadi Client” → masukkan kode 6 digit → otomatis tersambung."],
+              ["Mulai menonton", "Layar perangkat sumber tampil di perangkat target. Atur kualitas, zoom, atau layar penuh sesuai kebutuhan."],
+            ].map(([title, desc], i) => (
+              <li key={title} className="flex gap-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 font-bold">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="font-semibold">{title}</p>
+                  <p className="text-zinc-400">{desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* Fitur */}
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-8 text-center text-2xl font-semibold">Fitur</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-2xl border border-white/10 bg-white/5 p-5"
+              >
+                <div className="text-2xl">{f.icon}</div>
+                <p className="mt-3 font-semibold">{f.title}</p>
+                <p className="mt-1 text-sm text-zinc-400">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="flex flex-col items-center gap-4 px-6 py-20 text-center">
+        <h2 className="max-w-xl text-3xl font-bold">Siap memulai?</h2>
+        <Link
+          href="/app"
+          className="rounded-xl bg-indigo-600 px-8 py-3 font-semibold text-white transition hover:bg-indigo-500"
+        >
+          Buka Aplikasi
+        </Link>
+      </section>
     </div>
   );
 }
