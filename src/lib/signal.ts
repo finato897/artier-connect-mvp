@@ -77,6 +77,19 @@ export async function apiConnected(roomId: string, side: IceSide) {
   });
 }
 
+/** Hapus sesi — dipanggil server saat keluar aplikasi. */
+export async function apiLeave(roomId: string) {
+  try {
+    await fetch("/api/leave", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId }),
+    });
+  } catch {
+    // Gagal kirim (offline/unload) — abaikan.
+  }
+}
+
 /** Ambil public IP untuk same-WiFi check. Gagal → null (soft-pass). */
 export async function getPublicIp(): Promise<string | null> {
   try {

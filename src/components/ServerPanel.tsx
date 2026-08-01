@@ -9,6 +9,7 @@ import {
   apiPushIce,
   apiDrainIce,
   apiConnected,
+  apiLeave,
   getPublicIp,
 } from "@/lib/signal";
 import {
@@ -43,6 +44,7 @@ export default function ServerPanel() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const stopPollingRef = useRef<(() => void) | null>(null);
   const stoppedRef = useRef(false);
+  const roomIdRef = useRef("");
 
   const cleanupPeer = useCallback(() => {
     stopPollingRef.current?.();
@@ -52,14 +54,41 @@ export default function ServerPanel() {
     senderRef.current = null;
   }, []);
 
-  // Cleanup saat unmount.
+  // Cleanup saat unmount + keluar aplikasi → hapus sesi.
   useEffect(() => {
-    return () => {
+    const leave = () => {
       stoppedRef.current = true;
       cleanupPeer();
       streamRef.current?.getTracks().forEach((t) => t.stop());
+      // Keluar browser/tab: hapus room agar kode tidak hidup selamanya.
+      if (roomIdRef.current) void apiLeave(roomIdRef.current);
+    };
+    const unload = () => {
+      if (roomIdRef.current) {
+        // sendBeacon lebih andal saat unload daripada fetch.
+        try {
+          navigator.sendBeacon?.(
+            "/api/leave",
+            new Blob([JSON.stringify({ roomId: roomIdRef.current })], {
+              type: "application/json",
+            })
+          );
+        } catch {
+          void apiLeave(roomIdRef.current);
+        }
+      }
+    };
+    window.addEventListener("beforeunload", unload);
+    return () => {
+      window.removeEventListener("beforeunload", unload);
+      leave();
     };
   }, [cleanupPeer]);
+
+  const setRoomIdBoth = (v: string) => {
+    roomIdRef.current = v;
+    setRoomId(v);
+  };
 
   const setPhase = (s: Status, msg = "") => {
     setStatus(s);
@@ -160,7 +189,7 @@ export default function ServerPanel() {
     }
     const rid = created.roomId;
     setCode(created.code);
-    setRoomId(rid);
+    setRoomIdBoth(rid);
     setPhase("waiting");
 
     // Polling: tunggu client join, lalu mulai capture & signaling.
@@ -254,7 +283,7 @@ export default function ServerPanel() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setCode("");
-    setRoomId("");
+    setRoomIdBoth("");
     setPhase("idle");
   };
 

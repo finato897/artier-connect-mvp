@@ -1,12 +1,13 @@
 import { store } from "./redis";
 
 // Keys Redis: prefix `ac:`.
-// - ac:otp:<code>  → roomId          (TTL 180s)
-// - ac:room:<roomId> → JSON RoomState (TTL 15m)
+// - ac:otp:<code>      → roomId (persistent; terhapus saat server keluar aplikasi)
+// - ac:room:<roomId>   → JSON RoomState (persistent)
 // - ac:ice:server:<roomId> / ac:ice:client:<roomId> → list kandidat ICE
+//
+// Tanpa TTL: sesi hanya berakhir ketika server keluar aplikasi (POST /api/leave).
+// Pasangan OTP↔room & room dibersihkan eksplisit di closeRoom().
 
-export const OTP_TTL_SEC = 180;
-export const ROOM_TTL_SEC = 60 * 15;
 const PREFIX = "ac";
 
 const otpKey = (code: string) => `${PREFIX}:otp:${code}`;
@@ -46,8 +47,8 @@ export async function createRoom(
 ): Promise<string> {
   const roomId = generateRoomId();
   const room: RoomState = { roomId, code, serverIp, joined: false, state: "waiting" };
-  await store.set(roomKey(roomId), JSON.stringify(room), { ex: ROOM_TTL_SEC });
-  await store.set(otpKey(code), roomId, { ex: OTP_TTL_SEC });
+  await store.set(roomKey(roomId), JSON.stringify(room));
+  await store.set(otpKey(code), roomId);
   return roomId;
 }
 
@@ -60,12 +61,6 @@ export async function getRoom(roomId: string): Promise<RoomState | null> {
   return raw ? (JSON.parse(raw) as RoomState) : null;
 }
 
-async function setRoom(room: RoomState): Promise<void> {
-  await store.set(roomKey(room.roomId), JSON.stringify(room), {
-    ex: ROOM_TTL_SEC,
-  });
-}
-
 export async function patchRoom(
   roomId: string,
   patch: Partial<RoomState>
@@ -73,16 +68,20 @@ export async function patchRoom(
   const room = await getRoom(roomId);
   if (!room) return null;
   Object.assign(room, patch);
-  await setRoom(room);
+  await store.set(roomKey(roomId), JSON.stringify(room));
   return room;
 }
 
+/** Bersihkan pasangan room + OTP + ICE. Dipanggil saat server keluar aplikasi. */
 export async function closeRoom(roomId: string): Promise<void> {
   const room = await getRoom(roomId);
   if (!room) return;
-  room.state = "closed";
-  await setRoom(room);
-  await store.del(otpKey(room.code));
+  await store.del(
+    otpKey(room.code),
+    roomKey(roomId),
+    iceKey(roomId, "server"),
+    iceKey(roomId, "client")
+  );
 }
 
 // --- ICE trickle, drain-on-read (LRANGE + LTRIM) ---
