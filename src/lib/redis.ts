@@ -1,12 +1,17 @@
 import { Redis } from "@upstash/redis";
 
 // Upstash Redis (Vercel KV) sebagai signaling store.
-// Env: UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN.
+// Mendukung dua set env:
+//   1. UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (Upstash resmi)
+//   2. KV_REST_API_URL + KV_REST_API_TOKEN (Vercel Storage auto-generated)
 // Tanpa konfigurasi (dev lokal), pakai in-memory fallback agar tetap jalan.
 
-const isConfigured = !!(
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-);
+const env = {
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
+};
+
+const isConfigured = !!(env.url && env.token);
 
 /** Minimal command interface yang dipakai lib/rooms. */
 export interface StoreLike {
@@ -18,7 +23,9 @@ export interface StoreLike {
   ltrim(key: string, start: number, stop: number): Promise<unknown>;
 }
 
-export const store: StoreLike = isConfigured ? Redis.fromEnv() : createMemoryStore();
+export const store: StoreLike = isConfigured
+  ? new Redis({ url: env.url!, token: env.token! })
+  : createMemoryStore();
 
 export function hasRedis(): boolean {
   return isConfigured;
