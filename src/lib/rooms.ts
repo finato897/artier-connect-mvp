@@ -53,12 +53,26 @@ export async function createRoom(
 }
 
 export async function resolveCode(code: string): Promise<string | null> {
-  return store.get(otpKey(code));
+  const v = await store.get(otpKey(code));
+  // Upstash auto-deserialize string JSON; jika ternyata objek {roomId}, kembalikan roomId.
+  if (v == null) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "object" && "roomId" in (v as Record<string, unknown>))
+    return (v as { roomId: string }).roomId;
+  return null;
 }
 
 export async function getRoom(roomId: string): Promise<RoomState | null> {
   const raw = await store.get(roomKey(roomId));
-  return raw ? (JSON.parse(raw) as RoomState) : null;
+  if (raw == null) return null;
+  // Upstash auto-deserialize nilai JSON → sudah objek; string JSON juga mungkin
+  // lewat. Terima keduanya.
+  if (typeof raw === "object") return raw as RoomState;
+  try {
+    return JSON.parse(raw) as RoomState;
+  } catch {
+    return null;
+  }
 }
 
 export async function patchRoom(
@@ -100,7 +114,15 @@ export async function drainIce(
   const key = iceKey(roomId, side);
   const raw = await store.lrange(key, 0, -1);
   if (raw.length) await store.ltrim(key, raw.length, -1);
-  return raw.map((s) => JSON.parse(s));
+  return raw.map((s) => {
+    // Upstash auto-deserialize JSON dalam list — string JSON atau objek.
+    if (typeof s === "object") return s;
+    try {
+      return JSON.parse(s);
+    } catch {
+      return s;
+    }
+  });
 }
 
 export async function setConnected(

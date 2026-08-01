@@ -24,7 +24,13 @@ export interface StoreLike {
 }
 
 export const store: StoreLike = isConfigured
-  ? new Redis({ url: env.url!, token: env.token! })
+  ? new Redis({
+      url: env.url!,
+      token: env.token!,
+      // Biarkan get/lrange kembalikan string mentah — rooms.ts yang parse.
+      // Mencegah inkonsistensi tipe antara store produksi dan in-memory fallback.
+      automaticDeserialization: false,
+    })
   : createMemoryStore();
 
 export function hasRedis(): boolean {
