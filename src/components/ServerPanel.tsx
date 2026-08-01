@@ -167,13 +167,28 @@ export default function ServerPanel() {
     const stop = (() => {
       let done = false;
       let timer: ReturnType<typeof setTimeout> | null = null;
+      // Kode 404 dianggap sesi benar-benar berakhir; error lain (network/cold
+      // start) ditahan beberapa kali agar serverless yang warming tidak
+      // langsung memutus sesi.
+      let consecutiveMisses = 0;
       const loop = async () => {
         if (done || stoppedRef.current) return;
-        const room = await apiGetRoom(rid);
-        if (!room) {
-          setPhase("error", "Sesi berakhir");
+        const res = await fetch(`/api/room?roomId=${encodeURIComponent(rid)}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            setPhase("error", "Sesi berakhir");
+            return;
+          }
+          consecutiveMisses++;
+          if (consecutiveMisses >= 5) {
+            setPhase("error", "Gagal terhubung ke server sesi");
+            return;
+          }
+          timer = setTimeout(loop, 1000);
           return;
         }
+        consecutiveMisses = 0;
+        const room = await res.json();
         if (room.joined && !captureUnsafeRef.current) {
           captureUnsafeRef.current = true;
           stopPolling();

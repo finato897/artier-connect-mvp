@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRoom, generateCode } from "@/lib/rooms";
+import { hasRedis } from "@/lib/redis";
 
 export const runtime = "nodejs";
 
@@ -15,5 +16,10 @@ export async function POST(req: NextRequest) {
   const code = generateCode();
   const roomId = await createRoom(code, publicIp);
 
-  return NextResponse.json({ ok: true, code, roomId });
+  return NextResponse.json({
+    ok: true,
+    code,
+    roomId,
+    redis: hasRedis() ? "yes" : "no",
+  });
 }
